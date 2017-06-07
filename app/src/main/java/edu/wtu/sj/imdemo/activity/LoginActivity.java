@@ -19,7 +19,7 @@ import edu.wtu.sj.imdemo.utils.ToastUtils;
 
 public class LoginActivity extends AppCompatActivity {
 
-    public static final String HOST = "192.168.56.1";  //ip
+    public static final String HOST = "1111111111";  //ip
     public static final int PORT = 5222;  //服务器端口号
     private EditText mUsername;  //用户名
     private EditText mPassword;  //密码
