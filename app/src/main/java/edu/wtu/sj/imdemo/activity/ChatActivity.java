@@ -6,18 +6,23 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -26,8 +31,11 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -36,6 +44,7 @@ import edu.wtu.sj.imdemo.Provider.SmsProvider;
 import edu.wtu.sj.imdemo.R;
 import edu.wtu.sj.imdemo.dbhelper.SmsOpenHelper;
 import edu.wtu.sj.imdemo.service.ImService;
+import edu.wtu.sj.imdemo.utils.LogUtils;
 import edu.wtu.sj.imdemo.utils.ThreadUtils;
 import edu.wtu.sj.imdemo.utils.ToastUtils;
 
@@ -49,18 +58,46 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     TextView mTitle;
     @InjectView(R.id.lv_chat)
     ListView mLvChat;
-    @InjectView(R.id.et_content)
+    @InjectView(R.id.ed_replay)
+    EditText mEtContent;
+    /*@InjectView(R.id.et_content)
     EditText mEtContent;
     @InjectView(R.id.btn_send)
     Button mBtnSend;
     @InjectView(R.id.ib_emotion)
-    ImageView ivEmotion;
+    ImageView ivEmotion;*/
+    @InjectView(R.id.ib_send)
+    ImageButton ibSend;
+    @InjectView(R.id.ib_emoji)
+    ImageButton ibEmoji;
+
+    /*@InjectView(R.id.emoji_viewpager)
+    ViewPager vpEmoji;
+    @InjectView(R.id.tv_qq_face)
+    TextView tvQqFace;
+    @InjectView(R.id.tv_emoji_face)
+    TextView tvEmojiFace;
+    @InjectView(R.id.emoji_controller)
+    LinearLayout llEmojiContainer;
+    @InjectView(R.id.iv_delete)
+    ImageView ivDelete;*/
+    
+    @InjectView(R.id.ll_chat_emoji)
+    LinearLayout llChatEmoji;
+    
 
     private String mClickaccount;
     private String mClicknickname;
     private CursorAdapter mAdapter;
     private ImService mImService;
     private MyServiceConnection mMyServiceConnection = new MyServiceConnection();
+    //private EmojiLayout mEmojiLayout = new EmojiLayout(getApplicationContext());
+    
+    private Context mContext;
+
+   /* public ChatActivity(Context context) {
+        mContext = context;
+    }*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,12 +131,17 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-        //mBtnSend.setOnClickListener(this);
-        ivEmotion.setOnClickListener(this);
+        
+        
+        /*EmojiLayout mEmojiLayout = new EmojiLayout(this);
+        flEmtion.addView(mEmojiLayout);*/
+        llChatEmoji.setVisibility(View.GONE);
+        
     }
 
     private void initData() {
         setOrUpdateAdapter();
+        
     }
 
     private void setOrUpdateAdapter() {
@@ -174,7 +216,11 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                                 cursor.moveToPosition(position);
                                 String body = cursor.getString(cursor.getColumnIndex(SmsOpenHelper.SmsTable.BODY));
                                 String time = cursor.getString(cursor.getColumnIndex(SmsOpenHelper.SmsTable.TIME));
-                                holder.body.setText(body);
+                                //发送处理过的消息 handler
+                                SpannableStringBuilder sb = handler(holder.body, body);
+
+                                LogUtils.d("ChatActivity-----setOrUpdateAdapter"+sb);
+                                holder.body.setText(sb);
                                 holder.time.setText(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(Long.parseLong(time))));
                                 return super.getView(position, convertView, parent);
                             }
@@ -204,10 +250,12 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initListener() {
-
+        //mBtnSend.setOnClickListener(this);
+        //ivEmotion.setOnClickListener(this);
+        ibEmoji.setOnClickListener(this);
     }
 
-    @OnClick(R.id.btn_send)
+    @OnClick(R.id.ib_send)
     public void send() {
         final String s = mEtContent.getText().toString();
         ThreadUtils.runInThread(new Runnable() {
@@ -241,13 +289,39 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    private SpannableStringBuilder handler(final TextView textView, String content) {
+        SpannableStringBuilder sb = new SpannableStringBuilder(content);
+        String regex = "(\\#\\[png/f_static_)\\d{3}(.png\\]\\#)";
+        Pattern p = Pattern.compile(regex);
+        Matcher m = p.matcher(content);
+
+        while (m.find()) {
+            String tempText = m.group();
+            String png = tempText.substring("#[".length(),tempText.length() - "]#".length());
+            try {
+                sb.setSpan(new ImageSpan(this, BitmapFactory.decodeStream(this.getAssets().open(png))), 
+                        m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb;
+    }
+
     //表情
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.ib_emotion:
-                ToastUtils.showToastSafe(this, "emtion");
-                
+            case R.id.ib_emoji:
+                //ToastUtils.showToastSafe(this, "emtion");
+                if (llChatEmoji.getVisibility() == View.GONE) {
+                    //LogUtils.d("ChatActivity----" + "VISIBLE");
+                    llChatEmoji.setVisibility(View.VISIBLE);
+                }
+                else {
+                    //LogUtils.d("ChatActivity----" + "GONE");
+                    llChatEmoji.setVisibility(View.GONE);
+                }
                 break;
             default:
                 break;
@@ -293,7 +367,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            System.out.println("----------------onServiceConnected-----------");
+            //System.out.println("----------------onServiceConnected-----------");
             ImService.MyBinder binder = (ImService.MyBinder) service;
             mImService = binder.getService();
         }

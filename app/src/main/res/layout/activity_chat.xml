@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/title"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="40dp"
         android:background="#33B5E5"
         android:gravity="center"
@@ -17,18 +17,19 @@
 
     <ListView
         android:id="@+id/lv_chat"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1"
-        ></ListView>
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+        
+    </ListView>
 
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="56dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="5dp">
         
-        <ImageView
+        <!--<ImageView
             android:id="@+id/ib_emotion"
             android:layout_gravity="center"
             android:paddingRight="3dp"
@@ -47,6 +48,12 @@
             android:id="@+id/btn_send"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="发送"/>
+            android:text="发送"/>-->
+        <!--<FrameLayout
+            android:id="@+id/fl_emtion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </FrameLayout>-->
+        <include layout="@layout/emtion_main"/>
     </LinearLayout>
 </LinearLayout>

@@ -35,7 +35,6 @@
             android:name=".Provider.ContactsProvider"
             android:authorities="edu.wtu.sj.imdemo.Provider.ContactsProvider"
             android:exported="true"/>
-
         <provider
             android:name=".Provider.SmsProvider"
             android:authorities="edu.wtu.sj.imdemo.Provider.SmsProvider"
@@ -43,9 +42,12 @@
 
         <service android:name=".service.ImService"/>
 
-        <activity android:name=".activity.ChatActivity"
-                  android:windowSoftInputMode="stateVisible|adjustResize">
+        <activity
+            android:name=".activity.ChatActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize">
         </activity>
+        <!--<activity android:name=".activity.TestActivity">
+        </activity>-->
     </application>
 
 </manifest>

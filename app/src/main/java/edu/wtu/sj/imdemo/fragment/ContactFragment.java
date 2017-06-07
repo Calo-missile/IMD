@@ -99,7 +99,7 @@ public class ContactFragment extends Fragment {
         ThreadUtils.runInUIThread(new Runnable() {
             @Override
             public void run() {
-                adapter(mCursor);
+                adapter(mCursor);//
             }
         });
     }
